@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Forecast history{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Forecast history</h1>
+    <p>
+      Every saved prediction, with the date it was made and the model that
+      made it. Past forecasts are compared with what actually sold.
+    </p>
+  </div>
+</div>
+
+<form class="filters" method="GET">
+  <select name="medicine_id">
+    <option value="">All medicines</option>
+    {% for m in medicines %}
+      <option value="{{ m.medicine_id }}"
+              {{ 'selected' if selected_medicine == m.medicine_id }}>
+        {{ m.name }}
+      </option>
+    {% endfor %}
+  </select>
+  <button class="btn btn-quiet" type="submit">Apply</button>
+  {% if selected_medicine %}
+    <a class="clear-link" href="{{ url_for('forecast_history') }}">Clear</a>
+  {% endif %}
+</form>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Made on</th>
+          <th>Medicine</th>
+          <th>Model</th>
+          <th>Covers</th>
+          <th class="num">Days</th>
+          <th class="num">Predicted total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in runs %}
+        <tr class="expandable" data-target="run-{{ loop.index }}">
+          <td class="expander"><span class="chevron">&rsaquo;</span></td>
+          <td class="date">{{ run.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+          <td>{{ run.medicine.name }}</td>
+          <td class="batch">{{ run.model_name or '—' }}</td>
+          <td class="date">
+            {{ run.first_date.strftime('%d %b') }} to
+            {{ run.last_date.strftime('%d %b %Y') }}
+          </td>
+          <td class="num">{{ run.rows|length }}</td>
+          <td class="num">{{ run.total }}</td>
+        </tr>
+
+        <tr class="detail-row" id="run-{{ loop.index }}" hidden>
+          <td colspan="7">
+            <div class="detail">
+              <table class="data inner">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th class="num">Predicted</th>
+                    <th class="num">Actual</th>
+                    <th class="num">Difference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in run.rows %}
+                  <tr>
+                    <td class="date">{{ row.forecast_date.strftime('%d %b %Y') }}</td>
+                    <td class="num">{{ row.predicted_quantity|round(1) }}</td>
+                    <td class="num">
+                      {% if row.actual is none %}
+                        <span class="batch">not yet</span>
+                      {% else %}
+                        {{ row.actual }}
+                      {% endif %}
+                    </td>
+                    <td class="num">
+                      {% if row.actual is none %}
+                        —
+                      {% else %}
+                        <span class="{{ 'below' if row.error|abs > 10 }}">
+                          {{ '+' if row.error > 0 else '' }}{{ row.error|round(1) }}
+                        </span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+
+              {% if run.scored %}
+              <p class="hint" style="margin-top:10px">
+                {{ run.scored }} of {{ run.rows|length }} days have happened.
+                Average error so far: {{ run.mae }} units per day.
+              </p>
+              {% else %}
+              <p class="hint" style="margin-top:10px">
+                None of these days have happened yet, so there is nothing to
+                compare against.
+              </p>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+
+        {% else %}
+        <tr>
+          <td colspan="7" class="empty">
+            No forecasts saved yet. Make one on the Prediction page and save it.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}

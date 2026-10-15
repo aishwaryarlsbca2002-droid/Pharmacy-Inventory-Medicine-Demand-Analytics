@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Import data{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Import data</h1>
+    <p>
+      Bring existing records in from a CSV file. Nothing is saved unless
+      every row in the file is valid.
+    </p>
+  </div>
+</div>
+
+{% if result %}
+<section class="panel outcome {{ 'outcome-ok' if result.saved else 'outcome-alert' }}">
+  <div class="outcome-body">
+    <div class="outcome-figure">
+      <div class="outcome-number">{{ result.saved or result.error_count }}</div>
+      <div class="outcome-caption">
+        {{ 'rows imported' if result.saved else 'problems found' }}
+      </div>
+    </div>
+    <div>
+      <h2 class="section-title">{{ result.filename }}</h2>
+      {% if result.saved %}
+        <p>
+          {{ result.saved }} {{ result.label|lower }} rows were added.
+          The file was stored as <code>{{ result.safe_name }}</code>.
+        </p>
+      {% else %}
+        <p>
+          Nothing was imported. Fix the rows listed below and upload again.
+          Partial imports are refused, because half a file would leave the
+          data inconsistent.
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if result.errors %}
+  <div class="table-wrap import-errors">
+    <table class="data">
+      <thead><tr><th>Problem</th></tr></thead>
+      <tbody>
+        {% for e in result.errors %}
+        <tr><td>{{ e }}</td></tr>
+        {% endfor %}
+        {% if result.error_count > result.errors|length %}
+        <tr>
+          <td class="batch">
+            and {{ result.error_count - result.errors|length }} more.
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+<div class="chart-grid">
+
+  <section class="panel form-panel wide">
+    <h2 class="section-title">Upload a file</h2>
+
+    <form method="POST" enctype="multipart/form-data" novalidate>
+      <div class="field">
+        <label for="kind">What are you importing?</label>
+        <select id="kind" name="kind" required>
+          {% for key, spec in templates.items() %}
+            <option value="{{ key }}" {{ 'selected' if kind == key }}>
+              {{ spec.label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="file">CSV file</label>
+        <input id="file" name="file" type="file" accept=".csv" required>
+        <div class="hint">
+          Plain .csv only, up to {{ max_kb }} KB and {{ max_rows }} rows.
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Check and import</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head simple">
+      <h2 class="section-title">File formats</h2>
+      <span class="hint">First row must be the header</span>
+    </div>
+
+    {% for key, spec in templates.items() %}
+    <div class="format-block">
+      <h3 class="format-name">{{ spec.label }}</h3>
+      <pre class="format-sample">{{ spec.columns|join(',') }}
+{{ spec.example }}</pre>
+      <a class="clear-link" href="{{ url_for('upload_template', kind=key) }}">
+        Download a blank {{ spec.label|lower }} template
+      </a>
+    </div>
+    {% endfor %}
+
+    <p class="hint gap-note">
+      Sales rows are matched to medicines by <code>medicine_code</code>, so
+      import medicines first if they are not already in the catalogue.
+    </p>
+  </section>
+
+</div>
+
+{% endblock %}

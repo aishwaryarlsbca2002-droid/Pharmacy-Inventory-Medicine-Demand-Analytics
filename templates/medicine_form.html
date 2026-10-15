@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>{{ heading }}</h1>
+    <p>{{ subheading }}</p>
+  </div>
+  <a class="btn btn-quiet" href="{{ url_for('medicines') }}">Back to list</a>
+</div>
+
+<section class="panel form-panel">
+  <form method="POST" novalidate>
+
+    <div class="form-row">
+      <div class="field">
+        <label for="medicine_code">Medicine code</label>
+        <input id="medicine_code" name="medicine_code" required
+               value="{{ values.medicine_code or '' }}">
+        <div class="hint">Your own reference, for example MED016. Must be unique.</div>
+      </div>
+
+      <div class="field">
+        <label for="category">Category</label>
+        <select id="category" name="category" required>
+          <option value="">Choose one</option>
+          {% for c in categories %}
+            <option value="{{ c }}" {{ 'selected' if values.category == c }}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="name">Name and strength</label>
+      <input id="name" name="name" required value="{{ values.name or '' }}">
+      <div class="hint">How it appears on the shelf, for example Paracetamol 500mg.</div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label for="unit_price">Selling price per unit</label>
+        <input id="unit_price" name="unit_price" type="number" step="0.01" min="0"
+               required value="{{ values.unit_price if values.unit_price is not none else '' }}">
+      </div>
+
+      <div class="field">
+        <label for="reorder_level">Reorder level</label>
+        <input id="reorder_level" name="reorder_level" type="number" min="0"
+               required value="{{ values.reorder_level if values.reorder_level is not none else '' }}">
+        <div class="hint">Stock at or below this triggers the dashboard alert.</div>
+      </div>
+    </div>
+
+    <label class="check">
+      <input type="checkbox" name="is_active" {{ 'checked' if values.is_active }}>
+      <span>Currently stocked</span>
+    </label>
+    <div class="hint">Clear this for a discontinued medicine, instead of deleting it.</div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+      <a class="btn btn-quiet" href="{{ url_for('medicines') }}">Cancel</a>
+    </div>
+
+  </form>
+</section>
+
+{% endblock %}

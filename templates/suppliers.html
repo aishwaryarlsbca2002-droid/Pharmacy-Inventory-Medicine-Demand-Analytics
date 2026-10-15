@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Suppliers{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Suppliers</h1>
+    <p>
+      {{ rows|length }} shown of {{ total }}.
+      {% if current_user.role != 'admin' %}
+        Supplier records are maintained by an administrator.
+      {% endif %}
+    </p>
+  </div>
+  {% if current_user.role == 'admin' %}
+    <a class="btn btn-primary" href="{{ url_for('supplier_new') }}">Add supplier</a>
+  {% endif %}
+</div>
+
+<form class="filters" method="GET">
+  <input type="search" name="q" value="{{ q }}"
+         placeholder="Search name, city or email">
+  <button class="btn btn-quiet" type="submit">Apply</button>
+  {% if q %}<a class="clear-link" href="{{ url_for('suppliers') }}">Clear</a>{% endif %}
+</form>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Supplier</th>
+          <th>City</th>
+          <th>Contact</th>
+          <th class="num">Invoices</th>
+          <th class="num">Total purchased</th>
+          <th>Last order</th>
+          {% if current_user.role == 'admin' %}<th></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for s, info in rows %}
+        <tr>
+          <td>{{ s.supplier_name }}</td>
+          <td>{{ s.city or '—' }}</td>
+          <td class="contact">
+            {% if s.phone %}<div>{{ s.phone }}</div>{% endif %}
+            {% if s.email %}<div class="batch">{{ s.email }}</div>{% endif %}
+          </td>
+          <td class="num">{{ info.invoices }}</td>
+          <td class="num">{{ "{:,.2f}".format(info.total_value) }}</td>
+          <td class="date">
+            {{ info.last_order.strftime('%d %b %Y') if info.last_order else '—' }}
+          </td>
+          {% if current_user.role == 'admin' %}
+          <td class="row-actions">
+            <a href="{{ url_for('supplier_edit', supplier_id=s.supplier_id) }}">Edit</a>
+            <form method="POST"
+                  action="{{ url_for('supplier_delete', supplier_id=s.supplier_id) }}"
+                  data-confirm
+                  data-confirm-name="{{ s.supplier_name }}"
+                  data-confirm-note="{{ info.invoices }} invoices on record.">
+              <button class="link-danger" type="submit">Delete</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="{{ 7 if current_user.role == 'admin' else 6 }}" class="empty">
+            No suppliers match that search.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}

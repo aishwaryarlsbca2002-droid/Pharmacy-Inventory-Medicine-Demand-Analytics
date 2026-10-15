@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>{{ heading }}</h1>
+    <p>{{ subheading }}</p>
+  </div>
+  <a class="btn btn-quiet" href="{{ url_for('suppliers') }}">Back to list</a>
+</div>
+
+<section class="panel form-panel">
+  <form method="POST" novalidate>
+
+    <div class="field">
+      <label for="supplier_name">Supplier name</label>
+      <input id="supplier_name" name="supplier_name" required
+             value="{{ values.supplier_name or '' }}">
+      <div class="hint">The company name as it appears on their invoices.</div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label for="phone">Phone</label>
+        <input id="phone" name="phone" value="{{ values.phone or '' }}">
+      </div>
+
+      <div class="field">
+        <label for="city">City</label>
+        <input id="city" name="city" value="{{ values.city or '' }}">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" value="{{ values.email or '' }}">
+      <div class="hint">Phone or email is required, so orders can be placed.</div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+      <a class="btn btn-quiet" href="{{ url_for('suppliers') }}">Cancel</a>
+    </div>
+
+  </form>
+</section>
+
+{% endblock %}

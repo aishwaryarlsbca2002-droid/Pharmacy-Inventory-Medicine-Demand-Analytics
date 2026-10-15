@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Today at a glance</h1>
+    <p>Stock that needs ordering, and batches that need clearing.</p>
+  </div>
+</div>
+
+<!-- The two decisions a pharmacist makes every morning lead the page. -->
+<div class="attention">
+
+  <section class="panel panel--amber">
+    <div class="panel-head">
+      <div class="panel-count">{{ stats.low_stock }}</div>
+      <div>
+        <h2>Below reorder level</h2>
+        <p>Order these before they run out</p>
+      </div>
+    </div>
+
+    {% if low_stock %}
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th class="num">In stock</th>
+            <th class="num">Reorder at</th>
+            <th class="num">Short by</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in low_stock %}
+          <tr>
+            <td>{{ m.name }}</td>
+            <td class="num below">{{ m.current_stock }}</td>
+            <td class="num">{{ m.reorder_level }}</td>
+            <td class="num">{{ m.reorder_level - m.current_stock }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="empty">Every medicine is above its reorder level.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel panel--red">
+    <div class="panel-head">
+      <div class="panel-count">{{ stats.expiring }}</div>
+      <div>
+        <h2>Expiring within 90 days</h2>
+        <p>Dispense these first, or write them off</p>
+      </div>
+    </div>
+
+    {% if expiring %}
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th>Batch</th>
+            <th>Expires</th>
+            <th class="num">Units</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m, batch, left in expiring %}
+          <tr>
+            <td>{{ m.name }}</td>
+            <td class="batch">{{ batch.batch_no }}</td>
+            <td class="date">{{ batch.expiry_date.strftime('%d %b %Y') }}</td>
+            <td class="num">{{ left }}</td>
+            <td>
+              <span class="pill pill-{{ batch.expiry_status|lower }}">
+                {{ batch.expiry_status }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="empty">No batches expiring in the next 90 days.</p>
+    {% endif %}
+  </section>
+
+</div>
+
+<!-- Context, deliberately quieter than the alerts above. -->
+<div class="stats">
+  <div class="stat">
+    <div class="value">{{ stats.medicines }}</div>
+    <div class="label">Medicines</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ stats.suppliers }}</div>
+    <div class="label">Suppliers</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ "{:,}".format(stats.sales) }}</div>
+    <div class="label">Sales recorded</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ "{:,.0f}".format(stats.stock_value) }}</div>
+    <div class="label">Stock value at retail</div>
+  </div>
+</div>
+
+{% endblock %}

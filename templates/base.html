@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!--
+  base.html - the shared layout every signed-in page extends.
+  A "block" is a named hole that child pages fill in, so the sidebar and
+  styling are written once instead of on every page.
+
+  Careful: Jinja reads its tags even inside HTML comments, so never put a
+  real Jinja tag in a comment.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Pharmacy Inventory{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <strong>Pharmacy</strong>
+        <span>Inventory &amp; demand</span>
+      </div>
+    </div>
+
+    <ul class="nav-list">
+      <li>
+        <a href="{{ url_for('dashboard') }}"
+           class="{{ 'active' if request.endpoint == 'dashboard' }}">Dashboard</a>
+      </li>
+      <li class="nav-divider">Master data</li>
+      <li>
+        <a href="{{ url_for('medicines') }}"
+           class="{{ 'active' if request.endpoint.startswith('medicine') }}">Medicines</a>
+      </li>
+      <li>
+        <a href="{{ url_for('suppliers') }}"
+           class="{{ 'active' if request.endpoint.startswith('supplier') }}">Suppliers</a>
+      </li>
+            <li class="nav-divider">Data entry</li>
+      <li>
+        <a href="{{ url_for('purchases') }}"
+           class="{{ 'active' if request.endpoint.startswith('purchase') }}">Purchases</a>
+      </li>
+      <li>
+        <a href="{{ url_for('sales') }}"
+           class="{{ 'active' if request.endpoint.startswith('sale') }}">Sales</a>
+      </li>
+      <li>
+        <a href="{{ url_for('expiry') }}"
+           class="{{ 'active' if request.endpoint == 'expiry' }}">Expiry alerts</a>
+      </li>
+      {% if current_user.role == 'admin' %}
+      <li>
+        <a href="{{ url_for('upload') }}"
+           class="{{ 'active' if request.endpoint.startswith('upload') }}">Import CSV</a>
+      </li>
+      {% endif %}
+
+      <li class="nav-divider">Insights</li>
+      <li>
+        <a href="{{ url_for('analytics') }}"
+           class="{{ 'active' if request.endpoint == 'analytics' }}">Analytics</a>
+      </li>
+      <li>
+        <a href="{{ url_for('predict') }}"
+           class="{{ 'active' if request.endpoint.startswith('predict') }}">Prediction</a>
+      </li>
+      <li>
+        <a href="{{ url_for('forecast_history') }}"
+           class="{{ 'active' if request.endpoint == 'forecast_history' }}">Forecast history</a>
+      </li>
+      <li>
+        <a href="{{ url_for('reports') }}"
+           class="{{ 'active' if request.endpoint.startswith('report') }}">Reports</a>
+      </li>
+
+
+
+      {% if current_user.role == 'admin' %}
+      <li class="nav-divider">Administration</li>
+      <li>
+        <a href="{{ url_for('admin_only') }}"
+           class="{{ 'active' if request.endpoint == 'admin_only' }}">User access</a>
+      </li>
+      {% endif %}
+    </ul>
+
+    <div class="who">
+      <div class="name">{{ current_user.username }}</div>
+      <div class="role">Signed in as {{ current_user.role }}</div>
+      <a href="{{ url_for('logout') }}">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+
+<!-- Confirmation dialog, used by any form marked data-confirm. -->
+<dialog id="confirm-dialog" class="confirm">
+  <h2>Delete <span data-confirm-name></span>?</h2>
+  <p data-confirm-note></p>
+  <p class="confirm-warn">This cannot be undone.</p>
+  <div class="confirm-actions">
+    <button type="button" class="btn btn-quiet" data-confirm-no>Keep it</button>
+    <button type="button" class="btn btn-danger" data-confirm-yes>Delete</button>
+  </div>
+</dialog>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

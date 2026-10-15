@@ -1,0 +1,22 @@
+# Virtual environment - rebuilt on each machine, never uploaded
+venv/
+.venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Flask instance folder
+instance/
+
+# Uploaded CSV files from testing
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Editor and OS files
+.vscode/
+.DS_Store
+Thumbs.db

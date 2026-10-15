@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Purchases{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Purchases</h1>
+    <p>Deliveries received, newest first. Select an invoice to see its batches.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('purchase_new') }}">Record delivery</a>
+</div>
+
+<form class="filters" method="GET">
+  <select name="supplier_id">
+    <option value="">All suppliers</option>
+    {% for s in suppliers %}
+      <option value="{{ s.supplier_id }}"
+              {{ 'selected' if selected_supplier == s.supplier_id }}>
+        {{ s.supplier_name }}
+      </option>
+    {% endfor %}
+  </select>
+  <input type="search" name="batch" value="{{ batch_query }}"
+         placeholder="Find a batch number">
+  <button class="btn btn-quiet" type="submit">Apply</button>
+  {% if selected_supplier or batch_query %}
+    <a class="clear-link" href="{{ url_for('purchases') }}">Clear</a>
+  {% endif %}
+</form>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Invoice</th>
+          <th>Date</th>
+          <th>Supplier</th>
+          <th class="num">Units</th>
+          <th class="num">Invoice total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in rows %}
+        <tr class="expandable" data-target="inv-{{ p.purchase_id }}">
+          <td class="expander"><span class="chevron">&rsaquo;</span></td>
+          <td class="batch">{{ p.invoice_no }}</td>
+          <td class="date">{{ p.purchase_date.strftime('%d %b %Y') }}</td>
+          <td>{{ p.supplier.supplier_name }}</td>
+          <td class="num">{{ p.items|sum(attribute='quantity') }}</td>
+          <td class="num">{{ "{:,.2f}".format(p.total_cost) }}</td>
+        </tr>
+
+        <tr class="detail-row" id="inv-{{ p.purchase_id }}" hidden>
+          <td colspan="6">
+            <div class="detail">
+              <table class="data inner">
+                <thead>
+                  <tr>
+                    <th>Medicine</th>
+                    <th>Batch</th>
+                    <th>Expiry</th>
+                    <th>Status</th>
+                    <th class="num">Quantity</th>
+                    <th class="num">Cost per unit</th>
+                    <th class="num">Line total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in p.items %}
+                  <tr>
+                    <td>{{ item.medicine.name }}</td>
+                    <td class="batch">{{ item.batch_no }}</td>
+                    <td class="date">{{ item.expiry_date.strftime('%d %b %Y') }}</td>
+                    <td>
+                      <span class="pill pill-{{ item.expiry_status|lower }}">
+                        {{ item.expiry_status }}
+                      </span>
+                    </td>
+                    <td class="num">{{ item.quantity }}</td>
+                    <td class="num">{{ "%.2f"|format(item.cost) }}</td>
+                    <td class="num">{{ "{:,.2f}".format(item.quantity * item.cost) }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+
+              {% if current_user.role == 'admin' %}
+              <div class="detail-actions">
+                {% if p.purchase_date == today_date %}
+                  <form method="POST"
+                        action="{{ url_for('purchase_delete', purchase_id=p.purchase_id) }}"
+                        data-confirm
+                        data-confirm-name="invoice {{ p.invoice_no }}"
+                        data-confirm-note="{{ p.items|length }} lines, {{ p.items|sum(attribute='quantity') }} units will be taken back out of stock.">
+                    <button class="link-danger" type="submit">Remove this delivery</button>
+                  </form>
+                {% else %}
+                  <span class="hint">
+                    Recorded on {{ p.purchase_date.strftime('%d %b %Y') }}.
+                    Only deliveries entered today can be removed.
+                  </span>
+                {% endif %}
+              </div>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+
+        {% else %}
+        <tr><td colspan="6" class="empty">No deliveries match these filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}

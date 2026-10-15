@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Record delivery{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Record delivery</h1>
+    <p>One invoice, with a line for every batch received.</p>
+  </div>
+  <a class="btn btn-quiet" href="{{ url_for('purchases') }}">Back to list</a>
+</div>
+
+<form method="POST" novalidate>
+
+  <!-- the invoice header -->
+  <section class="panel form-panel wide">
+    <h2 class="section-title">Invoice details</h2>
+
+    <div class="form-row three">
+      <div class="field">
+        <label for="supplier_id">Supplier</label>
+        <select id="supplier_id" name="supplier_id" required>
+          <option value="">Choose one</option>
+          {% for s in suppliers %}
+            <option value="{{ s.supplier_id }}"
+                    {{ 'selected' if header.supplier_id == s.supplier_id }}>
+              {{ s.supplier_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="invoice_no">Invoice number</label>
+        <input id="invoice_no" name="invoice_no" required
+               value="{{ header.invoice_no or '' }}">
+      </div>
+
+      <div class="field">
+        <label for="purchase_date">Date received</label>
+        <input id="purchase_date" name="purchase_date" type="date" required
+               max="{{ today }}"
+               value="{{ header.purchase_date or today }}">
+      </div>
+    </div>
+  </section>
+
+  <!-- the line items -->
+  <section class="panel">
+    <div class="panel-head simple">
+      <h2 class="section-title">Medicines received</h2>
+      <button type="button" class="btn btn-quiet" id="add-line">Add line</button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data lines">
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th class="num">Quantity</th>
+            <th>Batch number</th>
+            <th>Expiry date</th>
+            <th class="num">Cost per unit</th>
+            <th class="num">Line total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="line-rows">
+          {% for line in lines %}
+          <tr class="line-row">
+            <td>
+              <select name="medicine_id" required>
+                <option value="">Choose</option>
+                {% for m in medicines %}
+                  <option value="{{ m.medicine_id }}"
+                          {{ 'selected' if line.medicine_raw == m.medicine_id|string }}>
+                    {{ m.medicine_code }} — {{ m.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </td>
+            <td><input name="quantity" type="number" min="1" class="qty"
+                       value="{{ line.quantity_raw or '' }}"></td>
+            <td><input name="batch_no" value="{{ line.batch_no or '' }}"></td>
+            <td><input name="expiry_date" type="date"
+                       value="{{ line.expiry_raw or '' }}"></td>
+            <td><input name="cost" type="number" step="0.01" min="0" class="cost"
+                       value="{{ line.cost_raw or '' }}"></td>
+            <td class="num line-total">0.00</td>
+            <td class="row-actions">
+              <button type="button" class="link-danger remove-line">Remove</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" class="num total-label">Invoice total</td>
+            <td class="num" id="grand-total">0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <div class="form-actions standalone">
+    <button class="btn btn-primary" type="submit">Save delivery</button>
+    <a class="btn btn-quiet" href="{{ url_for('purchases') }}">Cancel</a>
+  </div>
+
+</form>
+
+<!-- the blank row that "Add line" copies -->
+<template id="line-template">
+  <tr class="line-row">
+    <td>
+      <select name="medicine_id" required>
+        <option value="">Choose</option>
+        {% for m in medicines %}
+          <option value="{{ m.medicine_id }}">{{ m.medicine_code }} — {{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td><input name="quantity" type="number" min="1" class="qty"></td>
+    <td><input name="batch_no"></td>
+    <td><input name="expiry_date" type="date" value="{{ default_expiry }}"></td>
+    <td><input name="cost" type="number" step="0.01" min="0" class="cost"></td>
+    <td class="num line-total">0.00</td>
+    <td class="row-actions">
+      <button type="button" class="link-danger remove-line">Remove</button>
+    </td>
+  </tr>
+</template>
+
+{% endblock %}

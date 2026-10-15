@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Sales{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Sales</h1>
+    <p>Medicines dispensed at the counter, newest first.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('sale_new') }}">Record sale</a>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="value">{{ today.transactions }}</div>
+    <div class="label">Sales today</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ today.units }}</div>
+    <div class="label">Units dispensed today</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ "{:,.2f}".format(today.revenue) }}</div>
+    <div class="label">Revenue today</div>
+  </div>
+</div>
+
+<form class="filters" method="GET">
+  <select name="medicine_id">
+    <option value="">All medicines</option>
+    {% for m in medicines %}
+      <option value="{{ m.medicine_id }}"
+              {{ 'selected' if selected_medicine == m.medicine_id }}>
+        {{ m.name }}
+      </option>
+    {% endfor %}
+  </select>
+  <input type="date" name="on_date" value="{{ on_date_raw }}" max="{{ today_date }}">
+  <button class="btn btn-quiet" type="submit">Apply</button>
+  {% if selected_medicine or on_date_raw %}
+    <a class="clear-link" href="{{ url_for('sales') }}">Clear</a>
+  {% endif %}
+</form>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Medicine</th>
+          <th>Category</th>
+          <th class="num">Quantity</th>
+          <th class="num">Price each</th>
+          <th class="num">Line total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in rows %}
+        <tr>
+          <td class="date">{{ s.sale_date.strftime('%d %b %Y') }}</td>
+          <td>{{ s.medicine.name }}</td>
+          <td class="batch">{{ s.medicine.category }}</td>
+          <td class="num">{{ s.quantity }}</td>
+          <td class="num">{{ "%.2f"|format(s.selling_price) }}</td>
+          <td class="num">{{ "{:,.2f}".format(s.revenue) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="empty">No sales match these filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}

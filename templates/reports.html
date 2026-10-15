@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Reports</h1>
+    <p>Printable summaries, each exportable as CSV for Excel.</p>
+  </div>
+  <a class="btn btn-primary"
+     href="{{ url_for('report_export', key=key, days=days) }}">
+    Export as CSV
+  </a>
+</div>
+
+<form class="filters" method="GET">
+  <select name="key">
+    {% for k, spec in reports.items() %}
+      <option value="{{ k }}" {{ 'selected' if key == k }}>{{ spec.label }}</option>
+    {% endfor %}
+  </select>
+
+  {% if reports[key].periods %}
+  <select name="days">
+    {% for d in [7, 30, 90, 365] %}
+      <option value="{{ d }}" {{ 'selected' if days == d }}>Last {{ d }} days</option>
+    {% endfor %}
+  </select>
+  {% endif %}
+
+  <button class="btn btn-quiet" type="submit">Show</button>
+  <button class="btn btn-quiet" type="button" onclick="window.print()">Print</button>
+</form>
+
+<section class="panel report">
+  <div class="report-head">
+    <div>
+      <h2 class="section-title">{{ report.title }}</h2>
+      <p class="hint">{{ report.subtitle }}</p>
+    </div>
+    <div class="report-meta">
+      <div>{{ report.rows|length }} row{{ '' if report.rows|length == 1 else 's' }}</div>
+      <div class="hint">Generated {{ generated }}</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          {% for c in report.columns %}
+            <th class="{{ 'num' if loop.index0 in report.numeric }}">{{ c }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in report.rows %}
+        <tr>
+          {% for cell in row %}
+            <td class="{{ 'num' if loop.index0 in report.numeric }}">
+              {% if cell is number and loop.index0 in report.numeric %}
+                {{ "{:,.2f}".format(cell) if cell is float else "{:,}".format(cell) }}
+              {% else %}
+                {{ cell }}
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="{{ report.columns|length }}" class="empty">
+            Nothing to report for this selection.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      {% if report.rows and report.totals %}
+      <tfoot>
+        <tr>
+          {% for cell in report.totals %}
+            <td class="{{ 'num' if loop.index0 in report.numeric }}">
+              {% if loop.index0 == 0 %}
+                Total
+              {% elif cell is number %}
+                {{ "{:,.2f}".format(cell) if cell is float else "{:,}".format(cell) }}
+              {% else %}
+                {{ cell }}
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+</section>
+
+{% endblock %}

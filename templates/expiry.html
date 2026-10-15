@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Expiry alerts{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Expiry alerts</h1>
+    <p>
+      Batches that still hold stock, ordered by how soon they expire.
+      Batches already sold out are not listed, because they need no action.
+    </p>
+  </div>
+</div>
+
+<!-- the three bands, with the money at stake -->
+<div class="attention expiry-bands">
+  <section class="panel band band-expired">
+    <div class="band-head">
+      <div class="band-count">{{ summary.expired_batches }}</div>
+      <div>
+        <h2>Expired</h2>
+        <p>Remove from the shelf now</p>
+      </div>
+    </div>
+    <div class="band-figures">
+      <div><span class="band-value">{{ summary.expired_units }}</span> units</div>
+      <div><span class="band-value">{{ "{:,.2f}".format(summary.expired_value) }}</span> at cost</div>
+    </div>
+  </section>
+
+  <section class="panel band band-critical">
+    <div class="band-head">
+      <div class="band-count">{{ summary.critical_batches }}</div>
+      <div>
+        <h2>Within 30 days</h2>
+        <p>Dispense these first</p>
+      </div>
+    </div>
+    <div class="band-figures">
+      <div><span class="band-value">{{ summary.critical_units }}</span> units</div>
+      <div><span class="band-value">{{ "{:,.2f}".format(summary.critical_value) }}</span> at cost</div>
+    </div>
+  </section>
+
+  <section class="panel band band-warning">
+    <div class="band-head">
+      <div class="band-count">{{ summary.warning_batches }}</div>
+      <div>
+        <h2>31 to 90 days</h2>
+        <p>Watch, no action yet</p>
+      </div>
+    </div>
+    <div class="band-figures">
+      <div><span class="band-value">{{ summary.warning_units }}</span> units</div>
+      <div class="hint">Still sellable</div>
+    </div>
+  </section>
+</div>
+
+<form class="filters" method="GET">
+  <select name="window">
+    {% for w, label in [(30, 'Next 30 days'), (90, 'Next 90 days'),
+                        (180, 'Next 180 days'), (0, 'Everything')] %}
+      <option value="{{ w }}" {{ 'selected' if window == w }}>{{ label }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="category">
+    <option value="">All categories</option>
+    {% for c in categories %}
+      <option value="{{ c }}" {{ 'selected' if selected_category == c }}>{{ c }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="status">
+    <option value="">Any status</option>
+    {% for s in ['Expired', 'Critical', 'Warning'] %}
+      <option value="{{ s }}" {{ 'selected' if selected_status == s }}>{{ s }}</option>
+    {% endfor %}
+  </select>
+
+  <button class="btn btn-quiet" type="submit">Apply</button>
+  {% if selected_category or selected_status or window != 90 %}
+    <a class="clear-link" href="{{ url_for('expiry') }}">Clear</a>
+  {% endif %}
+</form>
+
+<section class="panel">
+  <div class="panel-head simple">
+    <h2 class="section-title">{{ rows|length }} batches</h2>
+    <span class="hint">Most urgent first</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Medicine</th>
+          <th>Batch</th>
+          <th>Supplier</th>
+          <th>Expires</th>
+          <th class="num">Days left</th>
+          <th class="num">Units left</th>
+          <th class="num">Value at cost</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.medicine.name }}</td>
+          <td class="batch">{{ r.batch.batch_no }}</td>
+          <td class="batch">{{ r.supplier.supplier_name }}</td>
+          <td class="date">{{ r.batch.expiry_date.strftime('%d %b %Y') }}</td>
+          <td class="num {{ 'below' if r.days_left <= 30 }}">
+            {{ r.days_left }}
+          </td>
+          <td class="num">{{ r.remaining }}</td>
+          <td class="num">{{ "{:,.2f}".format(r.value_at_cost) }}</td>
+          <td>
+            <span class="pill pill-{{ r.status|lower }}">{{ r.status }}</span>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="empty">
+            Nothing expiring in this window. Try widening the filter.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if suppliers %}
+<section class="panel">
+  <div class="panel-head simple">
+    <h2 class="section-title">At-risk stock by supplier</h2>
+    <span class="hint">Expired and within 30 days</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Supplier</th>
+          <th class="num">Batches</th>
+          <th class="num">Units</th>
+          <th class="num">Value at cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in suppliers %}
+        <tr>
+          <td>{{ s.name }}</td>
+          <td class="num">{{ s.batches }}</td>
+          <td class="num">{{ s.units }}</td>
+          <td class="num">{{ "{:,.2f}".format(s.value) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint gap-note">
+    A supplier that repeatedly sends short-dated stock costs the pharmacy
+    money. This is the figure to raise at the next order.
+  </p>
+</section>
+{% endif %}
+
+{% endblock %}

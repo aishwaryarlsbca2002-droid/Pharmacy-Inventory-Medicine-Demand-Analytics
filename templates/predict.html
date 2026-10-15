@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Demand prediction{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Demand prediction</h1>
+    <p>What the model expects to sell, so you can order before you run out.</p>
+  </div>
+</div>
+
+{% if not info %}
+  <section class="panel form-panel wide">
+    <h2 class="section-title">No trained model yet</h2>
+    <p class="hint">
+      Run <code>python train_model.py</code> in the project folder. It reads
+      the sales table, compares three models and saves the best one into
+      <code>models/</code>. Reload this page once it has finished.
+    </p>
+  </section>
+{% else %}
+
+<!-- what the model is, and how good it is -->
+<div class="stats">
+  <div class="stat">
+    <div class="value">{{ info.name }}</div>
+    <div class="label">Model in use</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ info.mae }}</div>
+    <div class="label">MAE, units out per day</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ info.rmse }}</div>
+    <div class="label">RMSE</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ info.r2 }}</div>
+    <div class="label">R², variation explained</div>
+  </div>
+  <div class="stat">
+    <div class="value">{{ "{:,}".format(info.trained_on_rows) }}</div>
+    <div class="label">Rows trained on</div>
+  </div>
+</div>
+
+<form method="POST" class="filters predict-bar">
+  <select name="medicine_id" required>
+    <option value="">Choose a medicine</option>
+    {% for m in medicines %}
+      <option value="{{ m.medicine_id }}"
+              {{ 'selected' if chosen and chosen.medicine_id == m.medicine_id }}>
+        {{ m.medicine_code }} — {{ m.name }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <select name="days">
+    {% for d in [7, 14, 30] %}
+      <option value="{{ d }}" {{ 'selected' if days == d }}>
+        Next {{ d }} days
+      </option>
+    {% endfor %}
+  </select>
+
+  <button class="btn btn-primary" type="submit">Predict</button>
+</form>
+
+{% if rows %}
+
+<!-- what to do about it -->
+<section class="panel outcome
+            {{ 'outcome-alert' if summary.shortfall > 0 else 'outcome-ok' }}">
+  <div class="outcome-body">
+    <div class="outcome-figure">
+      {% if summary.shortfall > 0 %}
+        <div class="outcome-number">{{ summary.shortfall|round|int }}</div>
+        <div class="outcome-caption">units short</div>
+      {% else %}
+        <div class="outcome-number">OK</div>
+        <div class="outcome-caption">stock covers it</div>
+      {% endif %}
+    </div>
+    <div>
+      <h2 class="section-title">{{ chosen.name }}</h2>
+      {% if summary.shortfall > 0 %}
+        <p>
+          The model expects {{ summary.total }} units over the next
+          {{ days }} days. You hold {{ summary.stock }}, so stock runs out
+          around day {{ summary.days_cover }}. Order at least
+          {{ summary.shortfall|round|int }} more units.
+        </p>
+      {% else %}
+        <p>
+          The model expects {{ summary.total }} units over the next
+          {{ days }} days, and you hold {{ summary.stock }}. No order is
+          needed for this period.
+        </p>
+      {% endif %}
+      <p class="hint">
+        Busiest day: {{ summary.peak.weekday }}
+        {{ summary.peak.date.strftime('%d %b') }}, about
+        {{ summary.peak.quantity }} units. Daily average
+        {{ summary.daily_average }}.
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="chart-grid predict-grid">
+  <section class="panel chart-panel">
+    <div class="panel-head simple">
+      <h2 class="section-title">Recent sales and the forecast</h2>
+      <span class="hint">Solid is actual, dashed is predicted</span>
+    </div>
+    <div class="chart-box tall"><canvas id="chart-forecast"></canvas></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head simple">
+      <h2 class="section-title">Day by day</h2>
+      <span class="hint">{{ days }} days</span>
+    </div>
+    <div class="table-wrap predict-table">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Day</th>
+            <th class="num">Predicted units</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td class="date">{{ r.date.strftime('%d %b') }}</td>
+            <td class="{{ 'batch' if r.weekday == 'Sunday' }}">{{ r.weekday }}</td>
+            <td class="num">{{ r.quantity }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" class="num total-label">Total</td>
+            <td class="num">{{ summary.total }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+</div>
+
+<form method="POST" action="{{ url_for('predict_save') }}" class="form-actions standalone">
+  <input type="hidden" name="medicine_id" value="{{ chosen.medicine_id }}">
+  <input type="hidden" name="days" value="{{ days }}">
+  <button class="btn btn-primary" type="submit">Save this forecast</button>
+  <span class="hint" style="align-self:center">
+    Saved forecasts are timestamped and kept in the History page, so a
+    prediction can later be compared with what actually sold.
+  </span>
+</form>
+
+<script id="forecast-data" type="application/json">
+  {{ chart_data|tojson }}
+</script>
+
+{% endif %}
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/predict.js') }}"></script>
+{% endblock %}

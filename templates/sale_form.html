@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Record sale{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Record sale</h1>
+    <p>One receipt, with a line for each medicine dispensed.</p>
+  </div>
+  <a class="btn btn-quiet" href="{{ url_for('sales') }}">Back to list</a>
+</div>
+
+<form method="POST" novalidate>
+
+  <section class="panel form-panel wide">
+    <h2 class="section-title">Sale details</h2>
+    <div class="field" style="max-width:260px">
+      <label for="sale_date">Date of sale</label>
+      <input id="sale_date" name="sale_date" type="date" required
+             max="{{ today }}" value="{{ sale_date or today }}">
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head simple">
+      <h2 class="section-title">Medicines dispensed</h2>
+      <button type="button" class="btn btn-quiet" id="add-line">Add line</button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data lines">
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th class="num">In stock</th>
+            <th class="num">Quantity</th>
+            <th class="num">Price each</th>
+            <th class="num">Line total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="line-rows">
+          {% for line in lines %}
+          <tr class="line-row">
+            <td>
+              <select name="medicine_id" class="medicine-select" required>
+                <option value="">Choose</option>
+                {% for m in medicines %}
+                  <option value="{{ m.medicine_id }}"
+                          data-stock="{{ m.current_stock }}"
+                          data-price="{{ m.unit_price }}"
+                          {{ 'selected' if line.medicine_raw == m.medicine_id|string }}>
+                    {{ m.medicine_code }} — {{ m.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </td>
+            <td class="num stock-cell">
+              {{ line.medicine.current_stock if line.medicine else '—' }}
+            </td>
+            <td><input name="quantity" type="number" min="1" class="qty"
+                       value="{{ line.quantity_raw or '' }}"></td>
+            <td><input name="selling_price" type="number" step="0.01" min="0"
+                       class="cost" value="{{ line.price_raw or '' }}"></td>
+            <td class="num line-total">0.00</td>
+            <td class="row-actions">
+              <button type="button" class="link-danger remove-line">Remove</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" class="num total-label">Receipt total</td>
+            <td class="num" id="grand-total">0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <div class="form-actions standalone">
+    <button class="btn btn-primary" type="submit">Save sale</button>
+    <a class="btn btn-quiet" href="{{ url_for('sales') }}">Cancel</a>
+  </div>
+
+</form>
+
+<template id="line-template">
+  <tr class="line-row">
+    <td>
+      <select name="medicine_id" class="medicine-select" required>
+        <option value="">Choose</option>
+        {% for m in medicines %}
+          <option value="{{ m.medicine_id }}"
+                  data-stock="{{ m.current_stock }}"
+                  data-price="{{ m.unit_price }}">
+            {{ m.medicine_code }} — {{ m.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </td>
+    <td class="num stock-cell">—</td>
+    <td><input name="quantity" type="number" min="1" class="qty"></td>
+    <td><input name="selling_price" type="number" step="0.01" min="0" class="cost"></td>
+    <td class="num line-total">0.00</td>
+    <td class="row-actions">
+      <button type="button" class="link-danger remove-line">Remove</button>
+    </td>
+  </tr>
+</template>
+
+{% endblock %}

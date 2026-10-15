@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in &middot; Pharmacy Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="auth">
+
+  <div class="auth-side">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <strong>Pharmacy</strong>
+        <span>Inventory &amp; demand</span>
+      </div>
+    </div>
+
+    <h1>Know what to order before you run out.</h1>
+    <p>
+      Stock levels, batch expiry and two years of sales history in one place,
+      with demand for the week ahead predicted from what actually sold.
+    </p>
+
+    <ul>
+      <li>Track stock <span>Across every batch</span></li>
+      <li>Catch expiry <span>90 days ahead</span></li>
+      <li>Forecast demand <span>Random Forest model</span></li>
+    </ul>
+  </div>
+
+  <div class="auth-panel">
+    <div class="auth-card">
+      <h2>Sign in</h2>
+      <p>Enter your pharmacy account details.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="POST" novalidate>
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" required autofocus
+                 autocomplete="username">
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required
+                 autocomplete="current-password">
+        </div>
+
+        <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+      </form>
+
+      <div class="auth-foot">
+        No account yet? <a href="{{ url_for('register') }}">Create one</a>
+      </div>
+
+      <div class="demo-creds">
+        Demo accounts<br>
+        <code>admin / admin123</code> &nbsp;&middot;&nbsp;
+        <code>pharmacist / pharma123</code>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

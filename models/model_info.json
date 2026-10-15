@@ -1,0 +1,82 @@
+{
+  "best_model": "Random Forest",
+  "features": [
+    "dayofweek",
+    "month",
+    "dayofmonth",
+    "weekofyear",
+    "is_sunday",
+    "lag_1",
+    "lag_7",
+    "lag_14",
+    "roll_mean_7",
+    "roll_mean_28",
+    "med_MED001",
+    "med_MED002",
+    "med_MED003",
+    "med_MED004",
+    "med_MED005",
+    "med_MED006",
+    "med_MED007",
+    "med_MED008",
+    "med_MED009",
+    "med_MED010",
+    "med_MED011",
+    "med_MED012",
+    "med_MED013",
+    "med_MED014",
+    "med_MED015"
+  ],
+  "base_features": [
+    "dayofweek",
+    "month",
+    "dayofmonth",
+    "weekofyear",
+    "is_sunday",
+    "lag_1",
+    "lag_7",
+    "lag_14",
+    "roll_mean_7",
+    "roll_mean_28"
+  ],
+  "medicine_columns": [
+    "med_MED001",
+    "med_MED002",
+    "med_MED003",
+    "med_MED004",
+    "med_MED005",
+    "med_MED006",
+    "med_MED007",
+    "med_MED008",
+    "med_MED009",
+    "med_MED010",
+    "med_MED011",
+    "med_MED012",
+    "med_MED013",
+    "med_MED014",
+    "med_MED015"
+  ],
+  "test_days": 180,
+  "metrics": [
+    {
+      "model": "Random Forest",
+      "MAE": 3.649,
+      "RMSE": 5.247,
+      "R2": 0.822
+    },
+    {
+      "model": "Gradient Boosting",
+      "MAE": 3.685,
+      "RMSE": 5.278,
+      "R2": 0.82
+    },
+    {
+      "model": "Linear Regression",
+      "MAE": 4.042,
+      "RMSE": 5.659,
+      "R2": 0.793
+    }
+  ],
+  "trained_on_rows": 10545,
+  "last_date": "2026-10-13"
+}

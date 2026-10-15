@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create account &middot; Pharmacy Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="auth">
+
+  <div class="auth-side">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <strong>Pharmacy</strong>
+        <span>Inventory &amp; demand</span>
+      </div>
+    </div>
+
+    <h1>Set up your counter account.</h1>
+    <p>
+      New accounts can record sales and purchases and read every report.
+      Only an administrator can change user access.
+    </p>
+  </div>
+
+  <div class="auth-panel">
+    <div class="auth-card">
+      <h2>Create account</h2>
+      <p>You will sign in with these details.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="POST" novalidate>
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" value="{{ username or '' }}"
+                 required autofocus autocomplete="username">
+          <div class="hint">Three characters or more.</div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required
+                 autocomplete="new-password">
+          <div class="hint">Six characters or more.</div>
+        </div>
+
+        <div class="field">
+          <label for="confirm">Confirm password</label>
+          <input type="password" id="confirm" name="confirm" required
+                 autocomplete="new-password">
+        </div>
+
+        <button class="btn btn-primary btn-block" type="submit">Create account</button>
+      </form>
+
+      <div class="auth-foot">
+        Already have one? <a href="{{ url_for('login') }}">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Sales analytics</h1>
+    <p>What happened, and why. Figures update without reloading the page.</p>
+  </div>
+</div>
+
+<!-- The period buttons do not reload the page. They call a JSON endpoint
+     and redraw the charts, which is the AJAX-style request the project asks for. -->
+<div class="filters" id="range-picker">
+  <span class="filter-label">Period</span>
+  <button class="btn btn-quiet range-btn" data-days="30" type="button">30 days</button>
+  <button class="btn btn-quiet range-btn" data-days="90" type="button">90 days</button>
+  <button class="btn btn-quiet range-btn active" data-days="365" type="button">1 year</button>
+  <button class="btn btn-quiet range-btn" data-days="730" type="button">2 years</button>
+  <span class="range-label" id="range-label"></span>
+</div>
+
+<div class="stats" id="headline">
+  <div class="stat">
+    <div class="value" id="kpi-revenue">—</div>
+    <div class="label">Revenue in period</div>
+  </div>
+  <div class="stat">
+    <div class="value" id="kpi-units">—</div>
+    <div class="label">Units sold</div>
+  </div>
+  <div class="stat">
+    <div class="value" id="kpi-transactions">—</div>
+    <div class="label">Transactions</div>
+  </div>
+  <div class="stat">
+    <div class="value" id="kpi-perday">—</div>
+    <div class="label">Average revenue per day</div>
+  </div>
+  <div class="stat">
+    <div class="value" id="kpi-stockvalue">—</div>
+    <div class="label">Stock value on hand</div>
+  </div>
+</div>
+
+<!-- row 1: trend -->
+<section class="panel chart-panel">
+  <div class="panel-head simple">
+    <h2 class="section-title">Sales trend by month</h2>
+    <span class="hint">Units as bars, revenue as the line</span>
+  </div>
+  <div class="chart-box tall"><canvas id="chart-trend"></canvas></div>
+</section>
+
+<!-- row 2: two charts -->
+<div class="chart-grid">
+  <section class="panel chart-panel">
+    <div class="panel-head simple">
+      <h2 class="section-title">Best sellers</h2>
+      <span class="hint">By units dispensed</span>
+    </div>
+    <div class="chart-box"><canvas id="chart-top"></canvas></div>
+  </section>
+
+  <section class="panel chart-panel">
+    <div class="panel-head simple">
+      <h2 class="section-title">Revenue by category</h2>
+      <span class="hint">Share of total</span>
+    </div>
+    <div class="chart-box"><canvas id="chart-category"></canvas></div>
+  </section>
+</div>
+
+<!-- row 3: weekday + diagnostic table -->
+<div class="chart-grid">
+  <section class="panel chart-panel">
+    <div class="panel-head simple">
+      <h2 class="section-title">Average units by day of week</h2>
+      <span class="hint">Staffing and ordering rhythm</span>
+    </div>
+    <div class="chart-box"><canvas id="chart-weekday"></canvas></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head simple">
+      <h2 class="section-title">Where units and revenue disagree</h2>
+      <span class="hint">Diagnostic</span>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th class="num">Rank by units</th>
+            <th class="num">Rank by revenue</th>
+            <th class="num">Revenue</th>
+          </tr>
+        </thead>
+        <tbody id="gap-rows">
+          <tr><td colspan="4" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint gap-note">
+      A medicine high on units but low on revenue is cheap and fast moving.
+      The reverse is expensive and slow. Ordering on units alone under-stocks
+      the second group.
+    </p>
+  </section>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js is served from our own static folder, not a CDN, so the
+     charts still draw if the network is down during a demonstration. -->
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

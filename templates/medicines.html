@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Medicines{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Medicines</h1>
+    <p>
+      {{ medicines|length }} shown of {{ total }} in the catalogue.
+      {% if current_user.role != 'admin' %}
+        Changes to the catalogue are made by an administrator.
+      {% endif %}
+    </p>
+  </div>
+  {% if current_user.role == 'admin' %}
+    <a class="btn btn-primary" href="{{ url_for('medicine_new') }}">Add medicine</a>
+  {% endif %}
+</div>
+
+<form class="filters" method="GET">
+  <input type="search" name="q" value="{{ filters.q }}"
+         placeholder="Search name or code">
+
+  <select name="category">
+    <option value="">All categories</option>
+    {% for c in categories %}
+      <option value="{{ c }}" {{ 'selected' if filters.category == c }}>{{ c }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="stock">
+    <option value="">Any stock level</option>
+    <option value="low" {{ 'selected' if filters.stock == 'low' }}>Below reorder level</option>
+    <option value="out" {{ 'selected' if filters.stock == 'out' }}>Out of stock</option>
+  </select>
+
+  <button class="btn btn-quiet" type="submit">Apply</button>
+  {% if filters.q or filters.category or filters.stock %}
+    <a class="clear-link" href="{{ url_for('medicines') }}">Clear</a>
+  {% endif %}
+</form>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th class="num">Unit price</th>
+          <th class="num">In stock</th>
+          <th class="num">Reorder at</th>
+          {% if current_user.role == 'admin' %}<th></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in medicines %}
+        <tr>
+          <td class="batch">{{ m.medicine_code }}</td>
+          <td>
+            {{ m.name }}
+            {% if not m.is_active %}
+              <span class="pill pill-muted">Inactive</span>
+            {% endif %}
+          </td>
+          <td>{{ m.category }}</td>
+          <td class="num">{{ "%.2f"|format(m.unit_price) }}</td>
+          <td class="num {{ 'below' if m.is_low_stock }}">{{ m.current_stock }}</td>
+          <td class="num">{{ m.reorder_level }}</td>
+          {% if current_user.role == 'admin' %}
+          <td class="row-actions">
+            <a href="{{ url_for('medicine_edit', medicine_id=m.medicine_id) }}">Edit</a>
+            <form method="POST"
+                  action="{{ url_for('medicine_delete', medicine_id=m.medicine_id) }}"
+                  data-confirm
+                  data-confirm-name="{{ m.name }}"
+                  data-confirm-note="Code {{ m.medicine_code }}, {{ m.current_stock }} units in stock.">
+              <button class="link-danger" type="submit">Delete</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="{{ 7 if current_user.role == 'admin' else 6 }}" class="empty">
+            No medicines match these filters.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}

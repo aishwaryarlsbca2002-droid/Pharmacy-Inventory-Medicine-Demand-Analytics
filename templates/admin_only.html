@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}User access{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>User access</h1>
+    <p>Only administrators can open this page.</p>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Account created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.username }}</td>
+          <td><span class="pill pill-role">{{ u.role }}</span></td>
+          <td>{{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<p class="hint" style="margin-top:14px">
+  Signing in as a pharmacist and opening <code>/admin-only</code> directly
+  redirects back to the dashboard. The check runs on the server, so hiding
+  the link is convenience, not security.
+</p>
+
+{% endblock %}
